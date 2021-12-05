@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
-using TMPro;
+using UnityEngine.UI;
 
 public class characterScript : MonoBehaviour
 {
@@ -42,6 +42,7 @@ public class characterScript : MonoBehaviour
     public float dashDuration = .5f;
     public float timeSinceLastDash;
     public float dashCooldown = 3f;
+    public Slider dashSlider;
 
     //Audio
     soundManagerScript soundManager;
@@ -51,7 +52,6 @@ public class characterScript : MonoBehaviour
     public GameObject[] itemOnField;
     public float distanceToPickUp = 2f;
     public GameObject closestItem;
-    public TMP_Text showText;
     public weaponManager weaponSystem;
 
     //Animation
@@ -60,6 +60,13 @@ public class characterScript : MonoBehaviour
 
     //Scope
     float scopingSpeed = 6f;
+
+    //Health
+    public health heal;
+
+    
+
+    public bool isCheatMode;
 
     void Start()
     {   
@@ -75,37 +82,46 @@ public class characterScript : MonoBehaviour
 
     private void Update()
     {
-        anim = weaponSystem.anim;
+        if (!heal.isDead)
+        {
+            anim = weaponSystem.anim;
 
-        if (gun.isScoping && !gun.isReloading)
-            moveSpeed = scopingSpeed;
+            if (gun.isScoping && !gun.isReloading && gun.canScope)
+                moveSpeed = scopingSpeed;
+            else
+                moveSpeed = runSpeed;
+
+            Friction();
+            Jumping();
+
+            timeSinceLastDash += Time.deltaTime;
+            float timeAfterDash = Mathf.Clamp(timeSinceLastDash / dashCooldown, 0f, dashCooldown);
+            dashSlider.value = timeAfterDash;
+
+            slopeDirection = Vector3.ProjectOnPlane(dir, slopeHit.normal);
+
+            if (!isGrounded && !WallRun.isWallRunning)
+            {
+                inAir = true;
+                anim.SetBool("inAir", true);
+            }
+            else if (WallRun.isWallRunning)
+            {
+                inAir = false;
+                anim.SetBool("inAir", false);
+            }
+            if (inAir && isGrounded)
+            {
+                inAir = false;
+                soundManager.Play("falling");
+                anim.SetBool("inAir", false);
+            }
+        }
         else
-            moveSpeed = runSpeed;
-
-        Friction();
-        Jumping();
-
-        timeSinceLastDash += Time.deltaTime;
-        
-
-        slopeDirection = Vector3.ProjectOnPlane(dir, slopeHit.normal);
-
-        if (!isGrounded && !WallRun.isWallRunning)
         {
-            inAir = true;
-            anim.SetBool("inAir", true);
-        }
-        else if (WallRun.isWallRunning)
-        {
-            inAir = false;
-            anim.SetBool("inAir", false);
-        }
-        if (inAir && isGrounded)
-        {
-            inAir = false;
-            soundManager.Play("falling");
-            anim.SetTrigger("falling");
-            anim.SetBool("inAir", false);
+            soundManager.Pause("falling");
+            soundManager.Pause("running");
+            moveSpeed = 0f;
         }
     }
     void FixedUpdate()
@@ -175,17 +191,31 @@ public class characterScript : MonoBehaviour
     {
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDistance, player);
 
-        if (isGrounded && Input.GetButtonDown("Jump"))
+        if (!isCheatMode)
         {
-            rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-            rb.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
-            soundManager.Play("jumping");
-            anim.SetTrigger("jumping");
+            if (isGrounded && Input.GetButtonDown("Jump"))
+            {
+                rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+                rb.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
+                soundManager.Play("jumping");
+                anim.SetTrigger("jumping");
+            }
+            else if (!isGrounded && !WallRun.isWallRunning)
+            {
+                rb.AddForce(-transform.up * fallSpeed, ForceMode.Acceleration);
+            }
         }
-        else if (!isGrounded && !WallRun.isWallRunning)
+        else
         {
-            rb.AddForce(-transform.up * fallSpeed, ForceMode.Acceleration);
+            if (Input.GetButtonDown("Jump"))
+            {
+                rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+                rb.AddForce(transform.up * jumpHeight, ForceMode.Impulse);
+                soundManager.Play("jumping");
+                anim.SetTrigger("jumping");
+            }
         }
+        
     }
 
     bool onSlope()
@@ -238,23 +268,4 @@ public class characterScript : MonoBehaviour
         rb.velocity = dir * moveSpeed;
         rb.useGravity = true;
     }
-
-    //public GameObject FindWeapon()
-    //{
-    //    itemOnField = GameObject.FindGameObjectsWithTag("Weapon");
-    //    GameObject closestItem = null;
-    //    float distance = Mathf.Infinity;
-    //    Vector3 curPos = transform.position;
-    //    foreach(GameObject item in itemOnField)
-    //    {
-    //        Vector3 diff = item.transform.position - curPos;
-    //        float curDistance = diff.sqrMagnitude;
-    //        if (curDistance < distance)
-    //        {
-    //            closestItem = item;
-    //            distance = curDistance;
-    //        }
-    //    }
-    //    return closestItem;
-    //}
 }

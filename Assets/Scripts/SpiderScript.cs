@@ -24,6 +24,7 @@ public class SpiderScript : MonoBehaviour
     public GameObject dissolveEffect;
     public GameObject body;
 
+    public float attackRange = 30f;
     public float attackTime;
     public float attackRecharge;
     public float lockBeforeAttackTime;
@@ -45,6 +46,13 @@ public class SpiderScript : MonoBehaviour
     float afterDeathTime = 0f;
     bool dissolved = false;
     public List<Material> spiderMat;
+    bool haveSeenPlayer;
+
+    public LayerMask playerMask;
+
+    public OpenDoor door;
+
+    public SpawnHeal spawnHeal;
 
 
     // Start is called before the first frame update
@@ -61,16 +69,31 @@ public class SpiderScript : MonoBehaviour
         {
             m.SetFloat("_dissolve", dissolve);
         }
-
+        spawnHeal = GetComponent<SpawnHeal>();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (!isDie)
+        enemyAI.updateRotation = false;
+        float distance = Vector3.Distance(transform.position, player.position);
+        Debug.DrawLine(transform.position, player.position);
+        if (!isDie && distance < attackRange)
         {
-            enemyAI.updateRotation = false;
+            if (Physics.Raycast(transform.position, player.position - transform.position, out RaycastHit hit, distance))
+            {
+                if (hit.transform.tag == "Player")
+                {
+                    haveSeenPlayer = true;
+                    Debug.DrawLine(transform.position, player.position - transform.position);
+                }
+               
+            }
+        }
 
+        if (haveSeenPlayer && !isDie)
+        {
+            
             //Vector3 targetPlayer = new Vector3(player.position.x, Mathf.Clamp(player.position.y, -15f, 15f), player.position.z);
 
             transform.LookAt(player.position);
@@ -81,11 +104,10 @@ public class SpiderScript : MonoBehaviour
                 if (hit.transform.tag == "Player")
                 {
                     canLookAtPlayer = true;
-                    Attack();
                 }
                 else
                 {
-                    canLookAtPlayer = false;
+                    canLookAtPlayer = false;   
                 }
             }
 
@@ -93,13 +115,23 @@ public class SpiderScript : MonoBehaviour
             if (!canLookAtPlayer)
             {
                 FindPosition();
+                isAttacking = false;
+                var em = laserCharging.emission;
+                em.enabled = false;
+                count = 0;
+                isCharging = false;
             }
             else
             {
                 enemyAI.SetDestination(transform.position);
+                isAttacking = true;
+                isWalking = false;
             }
 
-            
+            if (isAttacking && !isDie)
+            {
+                Attack();
+            }
         }
 
         if (curHealth <= 0f)
@@ -110,11 +142,6 @@ public class SpiderScript : MonoBehaviour
 
     void Attack()
     {
-        //attack
-        isAttacking = true;
-        isWalking = false;
-        
-
         if (Time.time >= nextAttackTime)
         {
             count += Time.deltaTime;
@@ -124,7 +151,7 @@ public class SpiderScript : MonoBehaviour
                 isCharging = true;
             }
 
-            if (count <= 4.8f)
+            if (count <= attackTime - .15f)
             {
                 targetPos = player.position;
             }
@@ -148,6 +175,7 @@ public class SpiderScript : MonoBehaviour
                     if (hit.transform.tag == "Player")
                     {
                         hit.transform.gameObject.GetComponent<health>().takeDamage((int)damage);
+                        Invoke("RegisterHitIndicator", 0f);
                     }
                     
                 }
@@ -161,6 +189,14 @@ public class SpiderScript : MonoBehaviour
         }   
     }
 
+    void RegisterHitIndicator()
+    {
+        if (!DI_System.CheckIfObjectInsight(this.transform))
+        {
+            DI_System.CreateIndicator(this.transform);
+        }
+    }
+
     void FindPosition()
     {
         isWalking = true;
@@ -171,17 +207,26 @@ public class SpiderScript : MonoBehaviour
 
     public void Attacked(float damage)
     {
+        haveSeenPlayer = true;
         curHealth -= damage;
     }
 
     void Die()
     {
+        isAttacking = false;
+        Destroy(laserCharging);
         afterDeathTime += Time.deltaTime;
         if (enemyAI.baseOffset > dieHeight)
         {
             enemyAI.baseOffset -= Time.deltaTime * 3f;
         }
-        isDie = true;
+        if (!isDie)
+        {
+            spawnHeal.SpawnHealCapsule(6);
+            door.enemyLeft--;
+            isDie = true;
+        }
+        
         if (colorSet > 0f)
         {
             colorSet -= Time.deltaTime;

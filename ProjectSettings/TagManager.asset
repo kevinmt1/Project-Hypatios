@@ -10,6 +10,8 @@ TagManager:
   - laser
   - spider
   - b0mb
+  - GunHolder
+  - CameraHolder
   layers:
   - Default
   - TransparentFX
@@ -25,8 +27,8 @@ TagManager:
   - Weapon
   - Enemy
   - Player
-  - 
-  - 
+  - GunHolder
+  - HealCapsule
   - 
   - 
   - 

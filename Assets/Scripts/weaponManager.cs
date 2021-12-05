@@ -17,6 +17,12 @@ public class weaponManager : MonoBehaviour
     public Sprite[] weaponSprite;
     public GameObject weaponUI;
 
+    public GameObject[] weapons;
+
+    public Text currentAmmo;
+    public Text maximumAmmo;
+    public Recoil gunRecoil;
+    public Image crosshairHit;
 
     // Start is called before the first frame update
     void Start()
@@ -27,6 +33,8 @@ public class weaponManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
+        currentAmmo.text = "" + gun.curAmmo;
+        maximumAmmo.text = "" + gun.maxAmmo;
         previousWeapon = selectedWeapon;
 
         if (Input.GetAxis("Mouse ScrollWheel") > 0f)
@@ -93,6 +101,7 @@ public class weaponManager : MonoBehaviour
                 weapon.gameObject.SetActive(true);
                 anim = weapon.transform.GetChild(0).gameObject.GetComponent<Animator>();
                 gun = weapon.transform.GetChild(0).gameObject.GetComponent<gunScript>();
+                gun.crosshairHit = crosshairHit;
             }
             else
             {
@@ -101,6 +110,13 @@ public class weaponManager : MonoBehaviour
             i++;
         }
         
+    }
+
+    public void addWeapon(int weaponNum)
+    {
+        Instantiate(weapons[weaponNum], transform);
+        selectedWeapon = weaponNum;
+        switchWeapon();
     }
 
     void findEquippedWeapon()

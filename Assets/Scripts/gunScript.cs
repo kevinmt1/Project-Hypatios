@@ -10,14 +10,15 @@ public class gunScript : MonoBehaviour
     
     Camera cam;
 
+    public bool canScope;
     public bool isAutomatic;
     [Header ("Weapon Status")]
     public float damage;
     [SerializeField]
-    int maxAmmo;
+    public int maxAmmo;
     [SerializeField]
     int magazineSize;
-    int curAmmo;
+    public int curAmmo;
     [Range (0f, .03f)]
     public float spread;
     public float recoilX;
@@ -42,11 +43,9 @@ public class gunScript : MonoBehaviour
     public float burstAmount;
 
     public weaponManager weaponSystem;
+    Recoil gunRecoil;
 
-    public Recoil gunRecoil;
-
-    public Text currentAmmo;
-    public Text maximumAmmo;
+    public Image crosshairHit;
 
     // Start is called before the first frame update
     void Start()
@@ -55,13 +54,14 @@ public class gunScript : MonoBehaviour
         curReloadTime = reloadTime;
         cam = GameObject.FindGameObjectWithTag("MainCamera").GetComponent<Camera>();
         curAmmo = magazineSize;
+        anim = GetComponent<Animator>();
+        weaponSystem = GameObject.FindGameObjectWithTag("GunHolder").GetComponent<weaponManager>();
+        gunRecoil = weaponSystem.gunRecoil;
     }
 
     // Update is called once per frame
     void Update()
     {
-        currentAmmo.text = "" + curAmmo;
-        maximumAmmo.text = "" + maxAmmo;
         anim = weaponSystem.anim;
 
         if (!anim.GetCurrentAnimatorStateInfo(0).IsName("Holster"))
@@ -136,9 +136,17 @@ public class gunScript : MonoBehaviour
             }
         }
     }
+
+    IEnumerator SetCrosshairHitActive()
+    {
+        crosshairHit.gameObject.SetActive(true);
+        yield return new WaitForSeconds(.2f);
+        crosshairHit.gameObject.SetActive(false);
+    }
+
     void Scoping()
     {
-        if (Input.GetMouseButtonDown(1))
+        if (Input.GetMouseButtonDown(1) && canScope)
         {
             isScoping = !isScoping;
             anim.SetBool("isScoping", isScoping);
@@ -163,10 +171,12 @@ public class gunScript : MonoBehaviour
                 if (hit.transform.gameObject.tag == "bomb")
                 {
                     hit.transform.gameObject.GetComponent<B0MBScript>().Attacked(damage);
+                    StartCoroutine(SetCrosshairHitActive());
                 }
                 else if (hit.transform.gameObject.tag == "spider")
                 {
                     hit.transform.gameObject.GetComponent<damageReceiver>().Attacked(damage);
+                    StartCoroutine(SetCrosshairHitActive());
                 }
                 points[1] = hit.point;
                 trace.GetComponent<LineRenderer>().SetPositions(points);
@@ -204,10 +214,12 @@ public class gunScript : MonoBehaviour
                     if (hit.transform.gameObject.tag == "bomb")
                     {
                         hit.transform.gameObject.GetComponent<B0MBScript>().Attacked(damage);
+                        StartCoroutine(SetCrosshairHitActive());
                     }
                     else if (hit.transform.gameObject.tag == "spider")
                     {
                         hit.transform.gameObject.GetComponent<damageReceiver>().Attacked(damage);
+                        StartCoroutine(SetCrosshairHitActive());
                     }
                         points[1] = hit.point;
                         trace.GetComponent<LineRenderer>().SetPositions(points);
@@ -228,6 +240,6 @@ public class gunScript : MonoBehaviour
 
             }
             
-        }
-    }
+        }  
+    }   
 }

@@ -30,6 +30,7 @@ public class B0MBScript : MonoBehaviour
     GameObject player;
     Vector3 playerPos;
 
+    public float attackRange;
     float distance;
     //public Renderer render;
     public Material mat1;
@@ -41,8 +42,11 @@ public class B0MBScript : MonoBehaviour
     bool hasInstanced = false;
     bool gonnaExplode = false;
     float colorChange;
+    public LayerMask playerMask;
 
     public List<Material> bombMat;
+    GameObject[] bomb;
+    public bool haveSeenPlayer;
 
     // Start is called before the first frame update
     void Start()
@@ -63,30 +67,53 @@ public class B0MBScript : MonoBehaviour
 
     // Update is called once per frame
     void Update()
-    {
+    {      
         playerPos = player.transform.position;
         distance = Vector3.Distance(transform.position, playerPos);
+       
+
+        if (distance <= attackRange && Physics.Raycast(transform.position, playerPos - transform.position, out RaycastHit hit, attackRange))
+        {
+            if (hit.transform.tag == "Player")
+            {
+                haveSeenPlayer = true;
+            }    
+        }
+
         
 
-        enemyAI.SetDestination(playerPos);
+        if (haveSeenPlayer)
+        {
+            bomb = GameObject.FindGameObjectsWithTag("bomb");
+            foreach (GameObject b in bomb)
+            {
+                if (Vector3.Distance(transform.position, b.transform.position) < attackRange)
+                {
+                    b.GetComponent<B0MBScript>().haveSeenPlayer = true;
+                }
+            }
 
-        if (distance < chaseDistance)
-        {
-            moveSpeed = chaseSpeed;
-        }
-        if (distance < distanceToExplode || curHealth <= 0f)
-        {
-            gonnaExplode = true;
-        }
+            enemyAI.SetDestination(playerPos);
 
-        if (gonnaExplode)
-        {
-            Explode();
-        }
+            if (distance < chaseDistance)
+            {
+                moveSpeed = chaseSpeed;
+            }
+            if (distance < distanceToExplode || curHealth <= 0f)
+            {
+                gonnaExplode = true;
+            }
+
+            if (gonnaExplode)
+            {
+                Explode();
+            }
+        }  
     }
 
     public void Attacked(float damage)
     {
+        haveSeenPlayer = true;
         curHealth -= damage;
     }
 

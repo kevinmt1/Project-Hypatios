@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Rendering;
+using UnityEngine.Rendering.Universal;
 
 public class health : MonoBehaviour
 {
@@ -11,34 +13,45 @@ public class health : MonoBehaviour
     public float healPerSecond;
     float healthAfterHeal = 0f;
     public Text healthPoint;
+    public bool isDead;
+    public SlowMotion slow;
+
+    //Die
+    public Volume postProcess;
+    private DepthOfField dof;
+    public characterScript character;
+    Animator anim;
+
+    public GameManager gameManager;
+    float timeAfterDeath = 0f;
 
     // Start is called before the first frame update
     void Start()
     {
         curHealth = maxHealth;
+        postProcess.sharedProfile.TryGet<DepthOfField>(out dof);
+        dof.focalLength.value = 1f;
+        anim = character.anim;
+        slow.ReturnTime();
     }
 
     void Update()
     {
         healthPoint.text = "" + curHealth;
-        if (healthAfterHeal > 0)
+        if(Input.GetKeyDown(KeyCode.J))
         {
-            if (curHealth < healthAfterHeal)
-                curHealth += healPerSecond * Time.deltaTime;
+            curHealth -= 20;
         }
-        if (curHealth >= 100)
+        if (curHealth <= 0f)
         {
-            curHealth = 100;
+            Die();
+            isDead = true;
         }
     }
 
     public void Heal(int healNum)
     {
-        healthAfterHeal = curHealth + healNum;
-        if (healthAfterHeal > 100)
-        {
-            healthAfterHeal = 100;
-        }
+        curHealth = Mathf.Clamp(curHealth + healNum, 0f, 100f);
     }
     public void takeDamage(int damage)
     {
@@ -47,15 +60,25 @@ public class health : MonoBehaviour
             healthAfterHeal -= damage;
         }
         curHealth -= damage;
-        if (curHealth <= 0f)
-        {
-            Die();
-        }
+        
     }
 
     public void Die()
     {
-       //Dead animation
-       //Restart game
+        
+        postProcess.sharedProfile.TryGet<DepthOfField>(out dof);
+        slow.SlowMo();
+        if (dof.focalLength.value < 150f)
+        {
+            dof.focalLength.value += Time.unscaledDeltaTime * 50f;
+        }
+
+        timeAfterDeath += Time.unscaledDeltaTime;
+        if (timeAfterDeath > 4f)
+        {  
+            Debug.Log("isCalled");
+            gameManager.RestartLevel();
+        }
+        
     }
 }
