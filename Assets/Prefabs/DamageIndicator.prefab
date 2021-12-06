@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2437670948985137552}
   - component: {fileID: 6300215839190294603}
-  - component: {fileID: 3049993227810875659}
+  - component: {fileID: 1706348463}
   m_Layer: 5
   m_Name: DamageIndicator
   m_TagString: Untagged
@@ -50,7 +50,7 @@ CanvasGroup:
   m_Interactable: 0
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
---- !u!114 &3049993227810875659
+--- !u!114 &1706348463
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -59,10 +59,13 @@ MonoBehaviour:
   m_GameObject: {fileID: 2437670948985137555}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 1fd92fd5eb59c154f866c983f9a77a9f, type: 3}
+  m_Script: {fileID: 11500000, guid: e733251b40136e94097bbd252e1ac40a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  spider: {fileID: 0}
   player: {fileID: 0}
+  cam: {fileID: 0}
+  holder: {fileID: 0}
 --- !u!1 &2437670950349126169
 GameObject:
   m_ObjectHideFlags: 0
@@ -98,7 +101,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
   m_AnchoredPosition: {x: 0, y: -75.5}
-  m_SizeDelta: {x: 504, y: 100}
+  m_SizeDelta: {x: 250, y: 40}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &2437670950349126172
 CanvasRenderer:
@@ -121,7 +124,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.101745084, b: 0, a: 1}
   m_RaycastTarget: 1
   m_Maskable: 1
   m_OnCullStateChanged:

@@ -32,7 +32,7 @@ public class HealPlayer : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.tag == "Player" && curHealth < 100)
+        if (other.tag == "Player" && curHealth < 100 && !playerHealth.isDead)
         {
             playerHealth.Heal(Random.Range(1, 5));
             Destroy(gameObject);

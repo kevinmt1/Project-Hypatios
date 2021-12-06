@@ -54,6 +54,8 @@ public class SpiderScript : MonoBehaviour
 
     public SpawnHeal spawnHeal;
 
+    public SpawnIndicator spawn;
+
 
     // Start is called before the first frame update
     void Start()
@@ -70,6 +72,7 @@ public class SpiderScript : MonoBehaviour
             m.SetFloat("_dissolve", dissolve);
         }
         spawnHeal = GetComponent<SpawnHeal>();
+        spawn = GameObject.FindGameObjectWithTag("SpawnIndicator").GetComponent<SpawnIndicator>();
     }
 
     // Update is called once per frame
@@ -175,7 +178,7 @@ public class SpiderScript : MonoBehaviour
                     if (hit.transform.tag == "Player")
                     {
                         hit.transform.gameObject.GetComponent<health>().takeDamage((int)damage);
-                        Invoke("RegisterHitIndicator", 0f);
+                        spawn.Spawn(transform);
                     }
                     
                 }
@@ -187,14 +190,6 @@ public class SpiderScript : MonoBehaviour
             }
          
         }   
-    }
-
-    void RegisterHitIndicator()
-    {
-        if (!DI_System.CheckIfObjectInsight(this.transform))
-        {
-            DI_System.CreateIndicator(this.transform);
-        }
     }
 
     void FindPosition()

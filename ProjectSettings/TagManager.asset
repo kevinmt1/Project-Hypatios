@@ -12,6 +12,7 @@ TagManager:
   - b0mb
   - GunHolder
   - CameraHolder
+  - SpawnIndicator
   layers:
   - Default
   - TransparentFX
